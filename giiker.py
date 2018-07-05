@@ -9,6 +9,7 @@ def initialize(on_state_change):
 
     manager.run()
 
+
 class GiikerDevice(gatt.Device):
     def __init__(self, *args, on_state_change=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -27,6 +28,7 @@ class GiikerDevice(gatt.Device):
         if self._on_state_change is not None:
             self._on_state_change(giiker_state)
 
+
 class GiikerState():
     def __init__(self, value: bytes):
         assert len(value) == 20
@@ -34,6 +36,8 @@ class GiikerState():
 
         self.cube_state = value[:16]
         self.recent_moves = list(map(GiikerMove, value[16:]))
+        self.last_move = self.recent_moves[0]
+
 
 class GiikerMove():
     def __init__(self, value):
