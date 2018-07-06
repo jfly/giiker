@@ -15,6 +15,18 @@ class GiikerDevice(gatt.Device):
         super().__init__(*args, **kwargs)
         self._on_state_change = on_state_change
 
+    def connect_succeeded(self):
+        super().connect_succeeded()
+        print("[%s] Connected" % (self.mac_address))
+
+    def connect_failed(self, error):
+        super().connect_failed(error)
+        print("[%s] Connection failed: %s" % (self.mac_address, str(error)))
+
+    def disconnect_succeeded(self):
+        super().disconnect_succeeded()
+        print("[%s] Disconnected" % (self.mac_address))
+
     def services_resolved(self):
         super().services_resolved()
 

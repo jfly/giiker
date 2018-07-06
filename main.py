@@ -1,13 +1,16 @@
 from subprocess import call
 
 import giiker
+import kodi
 
 T_PERM = "B D B' D' B' L B B D' B' D' B D B' L'".split()
+SEXY_MOVE = "B D B' D'".split()
 TOGGLE_REMOTE = ("U U' "*2).split()
 
 remote_control = True
 move_history = []
 
+kodi_event_client = kodi.KodiEventClient()
 
 def on_state_change(giiker_state):
     global remote_control, move_history
@@ -18,27 +21,43 @@ def on_state_change(giiker_state):
     if alg_just_applied(TOGGLE_REMOTE):
         remote_control = not(remote_control)
         if remote_control:
-            print("Congratulations, you have entered remote control mode!")
+            kodi_event_client.send_notification("Welcome back", "Your cube is now a remote control again.")
         else:
-            print("Happy cubing!")
+            kodi_event_client.send_notification("Happy cubing!", "Toggle the white face to go back to being a remote control.")
         move_history = []
         return
 
     if not remote_control:
         return
 
-    if alg_just_applied(T_PERM):
-        print("Nice T perm!")
-        call("xdotool key --clearmodifiers XF86AudioPlay", shell=True)
+    if alg_just_applied(SEXY_MOVE):
+        kodi.json_rpc("Player.PlayPause", [1, "toggle"])
         return
 
     if last_move.face == "U":
         if last_move.amount == 1:
-            call("set_volume.py 5+", shell=True)
+            kodi.json_rpc("Application.SetVolume", {"volume": "increment"})
         elif last_move.amount == -1:
-            call("set_volume.py 5-", shell=True)
-        call("show-volume.sh", shell=True)
+            kodi.json_rpc("Application.SetVolume", {"volume": "decrement"})
         return
+
+    if last_move.face == "R":
+        if last_move.amount == 1:
+            kodi_event_client.press_button("right")
+        if last_move.amount == -1:
+            kodi_event_client.press_button("left")
+
+    if last_move.face == "L":
+        if last_move.amount == 1:
+            kodi_event_client.press_button("down")
+        if last_move.amount == -1:
+            kodi_event_client.press_button("up")
+
+    if last_move.face == "F":
+        if last_move.amount == 1:
+            kodi_event_client.press_button("enter")
+        if last_move.amount == -1:
+            kodi_event_client.press_button("backspace")
 
 def alg_just_applied(alg):
     if len(move_history) < len(alg):

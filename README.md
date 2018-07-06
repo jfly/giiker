@@ -114,14 +114,6 @@ Device C2:DD:1F:F8:CB:DA (random)
 https://elinux.org/RPi_Bluetooth_LE#Using_Bluetooth_LE_with_Python
 
 ```
-$ pipenv install bluepy
-$ sudo blescan
-```
-
-## Node-ing
-
-https://github.com/noble/noble
-
-```
 $ sudo pacman -S gobject-introspection
+$ wget https://raw.githubusercontent.com/xbmc/xbmc/master/tools/EventClients/lib/python/xbmcclient.py
 ```
