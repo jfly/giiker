@@ -1,19 +1,23 @@
 from subprocess import call
+import argparse
 
 import giiker
 import kodi
+import kobo
 
 T_PERM = "B D B' D' B' L B B D' B' D' B D B' L'".split()
 SEXY_MOVE = "B D B' D'".split()
 TOGGLE_REMOTE = ("U U' "*2).split()
 
-remote_control = True
 move_history = []
 
-kodi_event_client = kodi.KodiEventClient()
+kodi_event_client = None
+remote_control = True
 
-def on_state_change(giiker_state):
-    global remote_control, move_history
+def kodi_on_state_change(giiker_state):
+    global remote_control, move_history, kodi_event_client
+    if kodi_event_client is None:
+        kodi_event_client = kodi.KodiEventClient()
 
     last_move = giiker_state.last_move
     move_history.append(last_move)
@@ -44,20 +48,31 @@ def on_state_change(giiker_state):
     if last_move.face == "R":
         if last_move.amount == 1:
             kodi_event_client.press_button("right")
-        if last_move.amount == -1:
+        elif last_move.amount == -1:
             kodi_event_client.press_button("left")
 
     if last_move.face == "L":
         if last_move.amount == 1:
             kodi_event_client.press_button("down")
-        if last_move.amount == -1:
+        elif last_move.amount == -1:
             kodi_event_client.press_button("up")
 
     if last_move.face == "F":
         if last_move.amount == 1:
             kodi_event_client.press_button("enter")
-        if last_move.amount == -1:
+        elif last_move.amount == -1:
             kodi_event_client.press_button("backspace")
+
+def kobo_on_state_change(giiker_state):
+    global remote_control, move_history
+
+    last_move = giiker_state.last_move
+    move_history.append(last_move)
+
+    if last_move.amount == 1:
+        kobo.next_page()
+    elif last_move.amount == -1:
+        kobo.previous_page()
 
 def alg_just_applied(alg):
     if len(move_history) < len(alg):
@@ -70,7 +85,16 @@ def alg_just_applied(alg):
     return True
 
 def main():
-    giiker.initialize(on_state_change=on_state_change)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("mode", choices=["kodi", "kobo"])
+    args = parser.parse_args()
+
+    if args.mode == "kodi":
+        giiker.initialize(on_state_change=kodi_on_state_change)
+    elif args.mode == "kobo":
+        giiker.initialize(on_state_change=kobo_on_state_change)
+    else:
+        assert False
 
 if __name__ == "__main__":
     main()
